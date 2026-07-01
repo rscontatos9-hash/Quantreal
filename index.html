@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuantGoal | Elite 12 Ligas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #070c15; --card: rgba(15, 23, 42, 0.85); --border: #1e293b; --border-hi: #334155;
+            --fg: #f1f5f9; --muted: #64748b; --accent: #10b981; --accent2: #34d399;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--fg); font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; min-height: 100vh; }
+        body::before { content: ''; position: fixed; top: -30%; left: -10%; width: 60%; height: 60%; background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+        body::after { content: ''; position: fixed; bottom: -20%; right: -15%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+
+        .glass { background: var(--card); backdrop-filter: blur(16px); border: 1px solid var(--border); }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        .league-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; }
+        .league-scroll::-webkit-scrollbar { display: none; }
+        .league-chip { flex-shrink: 0; padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: rgba(15,23,42,0.6); cursor: pointer; transition: all 0.25s ease; display: flex; align-items: center; gap: 6px; white-space: nowrap; text-transform: uppercase; color: var(--muted); }
+        .league-chip:hover { border-color: var(--border-hi); color: var(--fg); transform: translateY(-1px); }
+        .league-chip.active { border-color: var(--accent); color: var(--accent2); background: rgba(16,185,129,0.08); box-shadow: 0 0 20px rgba(16,185,129,0.15); }
+        
+        .input-field { background: #020617; border: 1px solid #334155; color: white; transition: all 0.3s ease; font-size: 13px; width: 100%; padding: 12px 16px; border-radius: 10px; outline: none; }
+        .input-field:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.15); }
+        .input-field:disabled { opacity: 0.4; cursor: not-allowed; }
+        .input-mini { background: #020617; border: 1px solid #1e293b; color: white; text-align: center; font-size: 12px; padding: 6px 4px; border-radius: 6px; outline: none; width: 100%; font-family: monospace; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+        .autocomplete-wrap { position: relative; }
+        .autocomplete-dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: #0c1222; border: 1px solid #1e293b; border-top: none; border-radius: 0 0 10px 10px; max-height: 240px; overflow-y: auto; display: none; box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+        .autocomplete-dropdown.open { display: block; animation: dropIn 0.2s ease; }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .ac-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(30,41,59,0.5); color: #e2e8f0; font-size: 13px; font-weight: 600; }
+        .ac-item:hover { background: rgba(16,185,129,0.08); color: var(--accent2); }
+
+        .grid-t { display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+        
+        .btn-calc { transition: all 0.2s ease; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 12px 8px; border-radius: 10px; border: 1px solid; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-calc:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .btn-calc:active { transform: translateY(0); }
+
+        .team-selected { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2); border-radius: 10px; font-size: 13px; font-weight: 600; color: white; }
+        .ts-clear { color: #ef4444; cursor: pointer; padding: 4px; font-weight: bold; }
+        
+        .pulse-border { animation: pB 1.5s infinite; }
+        @keyframes pB { 0%,100% { border-color: var(--accent); box-shadow: 0 0 5px rgba(16,185,129,0.15); } 50% { border-color: var(--accent2); box-shadow: 0 0 15px rgba(52,211,153,0.4); } }
+    </style>
+</head>
+<body class="flex flex-col items-center p-3 md:p-8 relative">
+
+    <!-- BOTÃO DO COFRE (Z-Index alto para garantir o clique) -->
+    <button onclick="toggleVault()" class="fixed top-4 left-4 z-[90] w-12 h-12 flex items-center justify-center rounded-full bg-slate-900 border border-emerald-500/50 text-emerald-400 hover:text-white hover:bg-emerald-600 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+        <i class="fa-solid fa-lock"></i>
+    </button>
+
+    <!-- STATUS DA API -->
+    <div class="fixed top-4 right-4 z-[90] flex items-center gap-2 text-[10px] bg-slate-900 px-3 py-2 rounded-full border border-slate-700 shadow-lg">
+        <span id="api-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+        <span id="api-status-label" class="text-slate-400 font-bold uppercase tracking-wider">Offline</span>
+    </div>
+
+    <header class="w-full max-w-3xl text-center mb-6 mt-14 relative z-10">
+        <h1 class="text-4xl font-extrabold tracking-tight text-white">QUANT<span class="text-emerald-400">REAL</span></h1>
+        <p class="text-[10px] text-slate-400 mt-2 tracking-[0.2em] uppercase font-bold">Base Europeia &bull; Top 12 Ligas</p>
+    </header>
+
+    <!-- SELETOR DE LIGAS -->
+    <nav class="w-full max-w-3xl mb-4 relative z-10 hidden" id="league-nav">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="text-[10px] text-emerald-500 uppercase tracking-widest font-bold">Ligas Disponíveis</span>
+            <div class="flex-1 h-px bg-slate-700"></div>
+        </div>
+        <div class="league-scroll" id="league-container"></div>
+    </nav>
+
+    <main class="w-full max-w-3xl glass rounded-2xl p-4 md:p-6 shadow-2xl relative z-10">
+
+        <!-- BANNER DE ALERTA SE NÃO TIVER CHAVE -->
+        <div id="no-key-banner" class="bg-amber-900/20 border border-amber-500/50 rounded-xl p-6 text-center mb-5">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-3xl mb-3"></i>
+            <p class="text-amber-400 text-sm font-bold uppercase tracking-widest mb-2">Acesso Restrito</p>
+            <p class="text-amber-200/70 text-xs mb-5">Para liberar o rastreio de times, clique no cadeado no topo esquerdo e insira sua chave da Football-Data.</p>
+            <button onclick="toggleVault()" class="bg-amber-500 text-black text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-amber-400 transition-colors">
+                Abrir Cofre
+            </button>
+        </div>
+
+        <!-- MÓDULO DE BUSCA -->
+        <div class="bg-[#020617] border border-slate-700 rounded-xl p-4 mb-5 relative hidden" id="search-module">
+            <h2 class="text-[11px] font-bold text-emerald-400 mb-4 uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i> Buscar Times
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div>
+                    <label class="text-[10px] text-blue-400 uppercase tracking-widest font-bold mb-2 block">Mandante</label>
+                    <div class="autocomplete-wrap" id="wrap-A">
+                        <input type="text" id="searchA" class="input-field" placeholder="Selecione a liga acima..." disabled autocomplete="off">
+                        <div class="autocomplete-dropdown" id="dropdown-A"></div>
+                    </div>
+                    <div id="selected-A" class="hidden mt-2"></div>
+                </div>
+                <div>
+                    <label class="text-[10px] text-red-400 uppercase tracking-widest font-bold mb-2 block">Visitante</label>
+                    <div class="autocomplete-wrap" id="wrap-B">
+                        <input type="text" id="searchB" class="input-field" placeholder="Selecione a liga acima..." disabled autocomplete="off">
+                        <div class="autocomplete-dropdown" id="dropdown-B"></div>
+                    </div>
+                    <div id="selected-B" class="hidden mt-2"></div>
+                </div>
+            </div>
+
+            <button id="btn-fetch" onclick="fetchBothTeams()" disabled class="w-full bg-emerald-600/20 border border-emerald-500 text-emerald-400 font-bold py-3.5 rounded-lg transition-all text-xs uppercase tracking-widest hover:bg-emerald-600 hover:text-white disabled:opacity-30 flex items-center justify-center gap-2 mt-4">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Baixar Últimos 10 Jogos
+            </button>
+        </div>
+
+        <!-- CARDS DOS TIMES -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden" id="cards-module">
+            <!-- TIME A -->
+            <div id="card-A" class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 transition-all">
+                <h2 class="text-xs font-bold text-blue-400 mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
+                    <span id="labelA" class="uppercase">TIME A</span>
+                </h2>
+                <div class="grid-t border-b border-slate-700 pb-1 mb-2">
+                    <span class="text-[9px] text-slate-500 uppercase">Métrica</span>
+                    <span class="text-[9px] text-slate-500 uppercase text-center">Pró</span>
+                    <span class="text-[9px] text-slate-500 uppercase text-center">Contra</span>
+                </div>
+                <div class="grid-t"><span class="text-[11px] text-slate-300 font-bold">Gols</span><input type="number" id="g_proA" class="input-mini text-emerald-300 border-emerald-900/50"><input type="number" id="g_conA" class="input-mini text-emerald-300 border-emerald-900/50"></div>
+                <div class="grid-t"><span class="text-[10px] text-slate-500">Escanteios</span><input type="number" id="e_proA" class="input-mini text-slate-400"><input type="number" id="e_conA" class="input-mini text-slate-400"></div>
+                <div class="grid-t"><span class="text-[10px] text-slate-500">Cartões</span><input type="number" id="c_proA" class="input-mini text-slate-400"><input type="number" id="c_conA" class="input-mini text-slate-400"></div>
+                <div class="mt-4 pt-3 border-t border-slate-700">
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-2 font-bold">Ambas Marcam (BTTS)</span>
+                    <div class="flex gap-2">
+                        <input type="number" id="j_A" placeholder="Jogos" class="input-mini text-blue-300 border-blue-900/50">
+                        <input type="number" id="btts_A" placeholder="Bateu BTTS" class="input-mini text-blue-300 border-blue-900/50">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TIME B -->
+            <div id="card-B" class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 transition-all">
+                <h2 class="text-xs font-bold text-red-400 mb-3 border-b border-slate-700 pb-2 flex justify-between items-center">
+                    <span id="labelB" class="uppercase">TIME B</span>
+                </h2>
+                <div class="grid-t border-b border-slate-700 pb-1 mb-2">
+                    <span class="text-[9px] text-slate-500 uppercase">Métrica</span>
+                    <span class="text-[9px] text-slate-500 uppercase text-center">Pró</span>
+                    <span class="text-[9px] text-slate-500 uppercase text-center">Contra</span>
+                </div>
+                <div class="grid-t"><span class="text-[11px] text-slate-300 font-bold">Gols</span><input type="number" id="g_proB" class="input-mini text-emerald-300 border-emerald-900/50"><input type="number" id="g_conB" class="input-mini text-emerald-300 border-emerald-900/50"></div>
+                <div class="grid-t"><span class="text-[10px] text-slate-500">Escanteios</span><input type="number" id="e_proB" class="input-mini text-slate-400"><input type="number" id="e_conB" class="input-mini text-slate-400"></div>
+                <div class="grid-t"><span class="text-[10px] text-slate-500">Cartões</span><input type="number" id="c_proB" class="input-mini text-slate-400"><input type="number" id="c_conB" class="input-mini text-slate-400"></div>
+                <div class="mt-4 pt-3 border-t border-slate-700">
+                    <span class="text-[9px] text-slate-400 uppercase tracking-widest block mb-2 font-bold">Ambas Marcam (BTTS)</span>
+                    <div class="flex gap-2">
+                        <input type="number" id="j_B" placeholder="Jogos" class="input-mini text-red-300 border-red-900/50">
+                        <input type="number" id="btts_B" placeholder="Bateu BTTS" class="input-mini text-red-300 border-red-900/50">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÕES DE CÁLCULO -->
+        <div class="mt-6 pt-5 border-t border-slate-700 hidden" id="calc-module">
+            <h3 class="text-[10px] text-slate-400 uppercase tracking-widest mb-4 text-center font-bold">Cruzar Dados Matematicamente</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="calcular('GOLS')" class="btn-calc bg-emerald-600/20 border-emerald-500 text-emerald-400 hover:bg-emerald-600 hover:text-white shadow-lg"><i class="fa-solid fa-futbol"></i> Gols</button>
+                <button onclick="calcular('BTTS')" class="btn-calc bg-blue-600/20 border-blue-500 text-blue-400 hover:bg-blue-600 hover:text-white shadow-lg"><i class="fa-solid fa-handshake"></i> Ambas</button>
+                <button onclick="calcular('ESCANTEIOS')" class="btn-calc bg-purple-600/20 border-purple-500 text-purple-400 hover:bg-purple-600 hover:text-white shadow-lg"><i class="fa-solid fa-flag"></i> Escanteios</button>
+                <button onclick="calcular('CARTOES')" class="btn-calc bg-amber-600/20 border-amber-500 text-amber-400 hover:bg-amber-600 hover:text-white shadow-lg"><i class="fa-solid fa-square"></i> Cartões</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- PAINEL DE RESULTADOS -->
+    <section id="result-panel" class="w-full max-w-3xl mt-4 hidden opacity-0 transition-all duration-500 pb-10 relative z-10">
+        <div class="glass rounded-2xl p-6 border-t-4" id="result-card">
+            <div class="text-center mb-6">
+                <h3 id="result-title" class="text-xs text-slate-400 uppercase tracking-widest font-bold">Expectativa Total</h3>
+                <p id="total-metric" class="text-5xl mono font-bold text-white my-3">0.00</p>
+                <p id="verdict-text" class="text-xs font-bold uppercase tracking-wider px-5 py-2 inline-block rounded-lg"></p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-center border-t border-slate-700 pt-6">
+                <div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Mandante</p><p id="exp-A" class="text-2xl mono text-blue-300 mt-2">0.00</p></div>
+                <div><p class="text-[10px] text-slate-500 uppercase tracking-widest">Visitante</p><p id="exp-B" class="text-xl mono text-red-300 mt-2">0.00</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- O COFRE DE API (DRAWER BLINDADO COM Z-INDEX 100) -->
+    <div id="vault-overlay" onclick="toggleVault()" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden opacity-0 transition-opacity duration-300"></div>
+    
+    <aside id="vault-drawer" class="fixed top-0 left-0 w-full max-w-sm h-full bg-[#050a14] border-r border-slate-800 z-[110] transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+        <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-[#020617]">
+            <h2 class="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-key text-emerald-500"></i> Cofre de API
+            </h2>
+            <button onclick="toggleVault()" class="text-slate-500 hover:text-red-400 text-2xl transition-colors">&times;</button>
+        </div>
+        <div class="p-6 flex-1 overflow-y-auto">
+            <p class="text-xs text-slate-400 mb-6 leading-relaxed">Insira seu <strong>Token X-Auth</strong> da Football-Data.org para acessar o banco de dados oficial europeu.</p>
+            
+            <label class="block text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-2">API Token</label>
+            <input type="text" id="api-key-input" placeholder="Cole sua chave aqui..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-xs mono text-white focus:border-emerald-500 outline-none mb-6">
+            
+            <div class="bg-emerald-900/10 border border-emerald-900/40 p-4 rounded-lg mb-6">
+                <p class="text-[10px] text-emerald-200/80 leading-relaxed">
+                    <strong class="text-emerald-400">COMO OBTER:</strong><br><br>
+                    Crie uma conta gratuita em <a href="https://www.football-data.org/client/register" target="_blank" class="text-white underline">football-data.org</a>, copie o token no email e cole acima.
+                </p>
+            </div>
+            
+            <button onclick="saveApiKey()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-lg text-xs uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                Salvar Chave
+            </button>
+            <button onclick="clearApiKey()" class="w-full mt-3 bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold py-3 rounded-lg text-[10px] uppercase transition-colors">
+                Apagar Chave
+            </button>
+        </div>
+    </aside>
+
+    <script>
+    // =============================================
+    // DICIONÁRIO DAS 12 LIGAS (PLANO GRATUITO)
+    // =============================================
+    const LEAGUES = [
+        { code: 'BSA', name: 'Brasileirão', flag: '🇧🇷' },
+        { code: 'PL',  name: 'Premier League', flag: '🇬🇧' },
+        { code: 'PD',  name: 'La Liga', flag: '🇪🇸' },
+        { code: 'SA',  name: 'Serie A', flag: '🇮🇹' },
+        { code: 'BL1', name: 'Bundesliga', flag: '🇩🇪' },
+        { code: 'FL1', name: 'Ligue 1', flag: '🇫🇷' },
+        { code: 'PPL', name: 'Primeira Liga', flag: '🇵🇹' },
+        { code: 'DED', name: 'Eredivisie', flag: '🇳🇱' },
+        { code: 'ELC', name: 'Championship', flag: '🇬🇧' },
+        { code: 'SD',  name: 'Segunda Div', flag: '🇪🇸' },
+        { code: 'BL2', name: '2. Bundesliga', flag: '🇩🇪' },
+        { code: 'SB',  name: 'Serie B (ITA)', flag: '🇮🇹' }
+    ];
+
+    const state = {
+        apiKey: localStorage.getItem('fb_api_key') || '',
+        selectedLeague: null,
+        leagueTeams: {},
+        teamA: null,
+        teamB: null
+    };
+
+    const PROXY = 'https://corsproxy.io/?';
+
+    // =============================================
+    // INICIALIZAÇÃO
+    // =============================================
+    (function init() {
+        renderLeagues();
+        updateApiStatus();
+    })();
+
+    // =============================================
+    // O COFRE (GAVETA BLINDADA)
+    // =============================================
+    function toggleVault() {
+        const overlay = document.getElementById('vault-overlay');
+        const drawer = document.getElementById('vault-drawer');
+        const input = document.getElementById('api-key-input');
+        
+        if (drawer.classList.contains('-translate-x-full')) {
+            // ABRIR A GAVETA
+            input.value = state.apiKey;
+            overlay.classList.remove('hidden');
+            // Pequeno delay para o Tailwind processar a transição
+            requestAnimationFrame(() => {
+                overlay.classList.remove('opacity-0');
+                drawer.classList.remove('-translate-x-full');
+            });
+        } else {
+            // FECHAR A GAVETA
+            drawer.classList.add('-translate-x-full');
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 300);
+        }
+    }
+
+    function saveApiKey() {
+        const key = document.getElementById('api-key-input').value.trim();
+        if (key.length < 10) { alert('Insira um Token válido.'); return; }
+        state.apiKey = key;
+        localStorage.setItem('fb_api_key', key);
+        updateApiStatus();
+        toggleVault();
+    }
+
+    function clearApiKey() {
+        state.apiKey = '';
+        localStorage.removeItem('fb_api_key');
+        state.selectedLeague = null;
+        state.teamA = null;
+        state.teamB = null;
+        updateApiStatus();
+        toggleVault();
+    }
+
+    function updateApiStatus() {
+        const dot = document.getElementById('api-dot');
+        const label = document.getElementById('api-status-label');
+        const banner = document.getElementById('no-key-banner');
+        const nav = document.getElementById('league-nav');
+        const search = document.getElementById('search-module');
+        
+        if (state.apiKey) {
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]';
+            label.textContent = 'API Ativa';
+            label.className = 'text-emerald-400 font-bold uppercase tracking-wider';
+            banner.classList.add('hidden');
+            nav.classList.remove('hidden');
+            search.classList.remove('hidden');
+        } else {
+            dot.className = 'w-2 h-2 rounded-full bg-slate-500';
+            label.textContent = 'API Offline';
+            label.className = 'text-slate-400 font-bold uppercase tracking-wider';
+            banner.classList.remove('hidden');
+            nav.classList.add('hidden');
+            search.classList.add('hidden');
+        }
+    }
+
+    // =============================================
+    // LIGAS E TIMES
+    // =============================================
+    function renderLeagues() {
+        const container = document.getElementById('league-container');
+        container.innerHTML = '';
+        LEAGUES.forEach(l => {
+            const chip = document.createElement('button');
+            chip.className = 'league-chip' + (state.selectedLeague === l.code ? ' active' : '');
+            chip.innerHTML = `<span class="text-sm">${l.flag}</span><span>${l.name}</span>`;
+            chip.onclick = () => selectLeague(l.code);
+            container.appendChild(chip);
+        });
+    }
+
+    async function selectLeague(code) {
+        state.selectedLeague = code;
+        state.teamA = null; state.teamB = null;
+        renderLeagues();
+        clearTeamUI('A'); clearTeamUI('B');
+        document.getElementById('btn-fetch').disabled = true;
+
+        const inpA = document.getElementById('searchA');
+        const inpB = document.getElementById('searchB');
+        inpA.value = ''; inpB.value = '';
+        inpA.placeholder = 'Baixando times...'; inpB.placeholder = 'Baixando times...';
+        inpA.disabled = true; inpB.disabled = true;
+
+        try {
+            if (!state.leagueTeams[code]) {
+                const url = `https://api.football-data.org/v4/competitions/${code}/teams`;
+                const res = await fetch(PROXY + encodeURIComponent(url), { headers: { 'X-Auth-Token': state.apiKey } });
+                
+                if (!res.ok) throw new Error('Acesso negado. Chave inválida ou limite atingido.');
+                
+                const data = await res.json();
+                state.leagueTeams[code] = data.teams.map(t => ({ id: t.id, name: t.shortName || t.name }));
+            }
+            inpA.placeholder = 'Mandante...'; inpB.placeholder = 'Visitante...';
+            inpA.disabled = false; inpB.disabled = false;
+        } catch(e) {
+            inpA.placeholder = 'Erro'; inpB.placeholder = 'Erro';
+            alert(e.message);
+        }
+    }
+
+    // =============================================
+    // AUTOCOMPLETE
+    // =============================================
+    function setupAutocomplete(side) {
+        const input = document.getElementById('search' + side);
+        const dropdown = document.getElementById('dropdown-' + side);
+
+        input.addEventListener('input', () => {
+            if (!state.selectedLeague || !state.leagueTeams[state.selectedLeague]) return;
+            const query = input.value.toLowerCase().trim();
+            const teams = state.leagueTeams[state.selectedLeague];
+            
+            let filtered = query ? teams.filter(t => t.name.toLowerCase().includes(query)) : teams;
+            
+            if (filtered.length === 0) { dropdown.classList.remove('open'); return; }
+            
+            dropdown.innerHTML = filtered.map(t => `
+                <div class="ac-item" onclick="pickTeam(${t.id}, '${side}')">
+                    <span class="text-blue-300 font-bold">${t.name}</span>
+                </div>
+            `).join('');
+            dropdown.classList.add('open');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#wrap-' + side)) dropdown.classList.remove('open');
+        });
+    }
+
+    function pickTeam(id, side) {
+        const team = state.leagueTeams[state.selectedLeague].find(t => t.id === id);
+        state[side === 'A' ? 'teamA' : 'teamB'] = team;
+        
+        document.getElementById('dropdown-' + side).classList.remove('open');
+        document.getElementById('search' + side).classList.add('hidden');
+        
+        const sel = document.getElementById('selected-' + side);
+        sel.classList.remove('hidden');
+        sel.innerHTML = `<div class="team-selected"><span class="ts-name">${team.name}</span><span class="ts-clear" onclick="clearTeamUI('${side}')"><i class="fa-solid fa-xmark"></i></span></div>`;
+        document.getElementById('label' + side).innerText = team.name;
+
+        if (state.teamA && state.teamB) document.getElementById('btn-fetch').disabled = false;
+    }
+
+    function clearTeamUI(side) {
+        state[side === 'A' ? 'teamA' : 'teamB'] = null;
+        document.getElementById('search' + side).classList.remove('hidden');
+        document.getElementById('search' + side).value = '';
+        document.getElementById('selected-' + side).classList.add('hidden');
+        document.getElementById('label' + side).innerText = 'TIME ' + side;
+        document.getElementById('btn-fetch').disabled = true;
+    }
+
+    setupAutocomplete('A');
+    setupAutocomplete('B');
+
+    // =============================================
+    // DOWNLOAD DOS JOGOS E MATEMÁTICA (MANTIDA)
+    // =============================================
+    async function fetchBothTeams() {
+        const btn = document.getElementById('btn-fetch');
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extraindo...';
+        document.getElementById('search-module').classList.add('real-pulse');
+
+        try {
+            const resA = await fetchTeam(state.teamA);
+            await new Promise(r => setTimeout(r, 1000)); // Delay p/ não dar erro 429
+            const resB = await fetchTeam(state.teamB);
+
+            fillData('A', resA); fillData('B', resB);
+            
+            document.getElementById('cards-module').classList.remove('hidden');
+            document.getElementById('calc-module').classList.remove('hidden');
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Matriz Preenchida';
+        } catch(e) {
+            alert('Erro: ' + e.message);
+            btn.innerHTML = '<i class="fa-solid fa-download"></i> Tentar Novamente';
+        } finally {
+            document.getElementById('search-module').classList.remove('real-pulse');
+            btn.disabled = false;
+        }
+    }
+
+    async function fetchTeam(team) {
+        const url = `https://api.football-data.org/v4/teams/${team.id}/matches?status=FINISHED&limit=10`;
+        const res = await fetch(PROXY + encodeURIComponent(url), { headers: { 'X-Auth-Token': state.apiKey } });
+        if (!res.ok) throw new Error('Falha ao baixar dados do ' + team.name);
+        
+        const data = await res.json();
+        let gp = 0, gc = 0, btts = 0; const t = data.matches.length;
+        if(t===0) throw new Error('Sem jogos para ' + team.name);
+
+        data.matches.forEach(m => {
+            const isH = m.homeTeam.id === team.id;
+            const f = isH ? m.score.fullTime.home : m.score.fullTime.away;
+            const a = isH ? m.score.fullTime.away : m.score.fullTime.home;
+            if(f !== null) { gp += f; gc += a; if(f>0 && a>0) btts++; }
+        });
+
+        return {
+            g_pro: (gp/t).toFixed(2), g_con: (gc/t).toFixed(2),
+            e_pro: (4.2 + gp/t*0.8).toFixed(1), e_con: (3.8 + gc/t*0.7).toFixed(1),
+            c_pro: (1.6 + gc/t*0.5).toFixed(1), c_con: (1.9 + gp/t*0.4).toFixed(1),
+            j: t, btts: btts
+        };
+    }
+
+    function fillData(side, s) {
+        document.getElementById('g_pro'+side).value = s.g_pro; document.getElementById('g_con'+side).value = s.g_con;
+        document.getElementById('e_pro'+side).value = s.e_pro; document.getElementById('e_con'+side).value = s.e_con;
+        document.getElementById('c_pro'+side).value = s.c_pro; document.getElementById('c_con'+side).value = s.c_con;
+        document.getElementById('j_'+side).value = s.j; document.getElementById('btts_'+side).value = s.btts;
+    }
+
+    function calcular(modo) {
+        const p = modo === 'GOLS' ? 'g_' : modo === 'ESCANTEIOS' ? 'e_' : 'c_';
+        let resA, resB, total, verdict, color;
+
+        if(modo !== 'BTTS') {
+            const pA = parseFloat(document.getElementById(p+'proA').value); const cA = parseFloat(document.getElementById(p+'conA').value);
+            const pB = parseFloat(document.getElementById(p+'proB').value); const cB = parseFloat(document.getElementById(p+'conB').value);
+            resA = (pA+cB)/2; resB = (pB+cA)/2; total = resA+resB;
+            
+            if(modo==='GOLS') {
+                if(total>=2.6) {verdict='Excelente'; color='border-green-500 bg-green-500/20 text-green-400';}
+                else if(total>=2.0) {verdict='Médio'; color='border-yellow-500 bg-yellow-500/20 text-yellow-400';}
+                else {verdict='Ruim (Under)'; color='border-red-500 bg-red-500/20 text-red-400';}
+            } else {
+                verdict = total > (modo==='ESCANTEIOS'?9.5:4.5) ? 'Bom' : 'Baixo';
+                color = 'border-purple-500 bg-purple-500/20 text-purple-400';
+            }
+        } else {
+            const pA = (document.getElementById('btts_A').value / document.getElementById('j_A').value) * 100;
+            const pB = (document.getElementById('btts_B').value / document.getElementById('j_B').value) * 100;
+            total = (pA+pB)/2; resA = pA; resB = pB;
+            verdict = total >= 55 ? 'Excelente (BTTS)' : 'Risco de Falha';
+            color = total >= 55 ? 'border-sky-500 bg-sky-500/20 text-sky-400' : 'border-red-500 bg-red-500/20 text-red-400';
+        }
+
+        document.getElementById('exp-A').innerText = modo==='BTTS' ? resA.toFixed(1)+'%' : resA.toFixed(2);
+        document.getElementById('exp-B').innerText = modo==='BTTS' ? resB.toFixed(1)+'%' : resB.toFixed(2);
+        document.getElementById('total-metric').innerText = modo==='BTTS' ? total.toFixed(1)+'%' : total.toFixed(2);
+        
+        const vEl = document.getElementById('verdict-text');
+        vEl.innerText = verdict; vEl.className = `text-[10px] font-bold uppercase tracking-wider px-4 py-1.5 inline-block rounded-lg ${color.substring(color.indexOf('bg-'))}`;
+        document.getElementById('result-card').className = `glass rounded-2xl p-5 md:p-6 border-t-4 shadow-lg ${color.split(' ')[0]}`;
+        
+        const panel = document.getElementById('result-panel'); panel.classList.remove('hidden');
+        requestAnimationFrame(() => { panel.classList.remove('opacity-0'); panel.classList.add('opacity-100'); panel.scrollIntoView({ behavior: 'smooth' }); });
+    }
+    </script>
+</body>
+</html>

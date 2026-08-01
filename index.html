@@ -58,7 +58,7 @@
 </head>
 <body class="flex flex-col items-center p-3 md:p-8 relative">
 
-    <!-- BOTÃO DO COFRE (Z-Index alto para garantir o clique) -->
+    <!-- BOTÃO DO COFRE -->
     <button onclick="toggleVault()" class="fixed top-4 left-4 z-[90] w-12 h-12 flex items-center justify-center rounded-full bg-slate-900 border border-emerald-500/50 text-emerald-400 hover:text-white hover:bg-emerald-600 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)]">
         <i class="fa-solid fa-lock"></i>
     </button>
@@ -71,13 +71,13 @@
 
     <header class="w-full max-w-3xl text-center mb-6 mt-14 relative z-10">
         <h1 class="text-4xl font-extrabold tracking-tight text-white">QUANT<span class="text-emerald-400">REAL</span></h1>
-        <p class="text-[10px] text-slate-400 mt-2 tracking-[0.2em] uppercase font-bold">Base Europeia &bull; Top 12 Ligas</p>
+        <p class="text-[10px] text-slate-400 mt-2 tracking-[0.2em] uppercase font-bold">Base Europeia &bull; Top 12 Ligas Gratuitas</p>
     </header>
 
-    <!-- SELETOR DE LIGAS -->
+    <!-- SELETOR DE LIGAS (Corrigido com as 12 ligas do Plano Free) -->
     <nav class="w-full max-w-3xl mb-4 relative z-10 hidden" id="league-nav">
         <div class="flex items-center gap-2 mb-2">
-            <span class="text-[10px] text-emerald-500 uppercase tracking-widest font-bold">Ligas Disponíveis</span>
+            <span class="text-[10px] text-emerald-500 uppercase tracking-widest font-bold">Ligas Disponíveis (API Free)</span>
             <div class="flex-1 h-px bg-slate-700"></div>
         </div>
         <div class="league-scroll" id="league-container"></div>
@@ -85,11 +85,11 @@
 
     <main class="w-full max-w-3xl glass rounded-2xl p-4 md:p-6 shadow-2xl relative z-10">
 
-        <!-- BANNER DE ALERTA SE NÃO TIVER CHAVE -->
+        <!-- BANNER DE ALERTA -->
         <div id="no-key-banner" class="bg-amber-900/20 border border-amber-500/50 rounded-xl p-6 text-center mb-5">
             <i class="fa-solid fa-triangle-exclamation text-amber-400 text-3xl mb-3"></i>
             <p class="text-amber-400 text-sm font-bold uppercase tracking-widest mb-2">Acesso Restrito</p>
-            <p class="text-amber-200/70 text-xs mb-5">Para liberar o rastreio de times, clique no cadeado no topo esquerdo e insira sua chave da Football-Data.</p>
+            <p class="text-amber-200/70 text-xs mb-5">Para liberar as 12 ligas do rastreio, clique no cadeado no topo esquerdo e insira sua chave da Football-Data.</p>
             <button onclick="toggleVault()" class="bg-amber-500 text-black text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-lg hover:bg-amber-400 transition-colors">
                 Abrir Cofre
             </button>
@@ -199,7 +199,7 @@
         </div>
     </section>
 
-    <!-- O COFRE DE API (DRAWER BLINDADO COM Z-INDEX 100) -->
+    <!-- O COFRE DE API -->
     <div id="vault-overlay" onclick="toggleVault()" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden opacity-0 transition-opacity duration-300"></div>
     
     <aside id="vault-drawer" class="fixed top-0 left-0 w-full max-w-sm h-full bg-[#050a14] border-r border-slate-800 z-[110] transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
@@ -210,7 +210,7 @@
             <button onclick="toggleVault()" class="text-slate-500 hover:text-red-400 text-2xl transition-colors">&times;</button>
         </div>
         <div class="p-6 flex-1 overflow-y-auto">
-            <p class="text-xs text-slate-400 mb-6 leading-relaxed">Insira seu <strong>Token X-Auth</strong> da Football-Data.org para acessar o banco de dados oficial europeu.</p>
+            <p class="text-xs text-slate-400 mb-6 leading-relaxed">Insira seu <strong>Token X-Auth</strong> da Football-Data.org para acessar o banco de dados oficial.</p>
             
             <label class="block text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-2">API Token</label>
             <input type="text" id="api-key-input" placeholder="Cole sua chave aqui..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-xs mono text-white focus:border-emerald-500 outline-none mb-6">
@@ -233,21 +233,20 @@
 
     <script>
     // =============================================
-    // DICIONÁRIO DAS 12 LIGAS (PLANO GRATUITO)
+    // DICIONÁRIO CORRIGIDO: APENAS AS 12 LIGAS DO PLANO GRÁTIS
     // =============================================
     const LEAGUES = [
-        { code: 'BSA', name: 'Brasileirão', flag: '🇧🇷' },
         { code: 'PL',  name: 'Premier League', flag: '🇬🇧' },
         { code: 'PD',  name: 'La Liga', flag: '🇪🇸' },
         { code: 'SA',  name: 'Serie A', flag: '🇮🇹' },
         { code: 'BL1', name: 'Bundesliga', flag: '🇩🇪' },
         { code: 'FL1', name: 'Ligue 1', flag: '🇫🇷' },
+        { code: 'BSA', name: 'Brasileirão', flag: '🇧🇷' },
         { code: 'PPL', name: 'Primeira Liga', flag: '🇵🇹' },
         { code: 'DED', name: 'Eredivisie', flag: '🇳🇱' },
         { code: 'ELC', name: 'Championship', flag: '🇬🇧' },
-        { code: 'SD',  name: 'Segunda Div', flag: '🇪🇸' },
-        { code: 'BL2', name: '2. Bundesliga', flag: '🇩🇪' },
-        { code: 'SB',  name: 'Serie B (ITA)', flag: '🇮🇹' }
+        { code: 'CL',  name: 'Champions League', flag: '🇪🇺' },
+        { code: 'CLI', name: 'Libertadores', flag: '🌎' }
     ];
 
     const state = {
@@ -261,37 +260,29 @@
     const PROXY = 'https://corsproxy.io/?';
 
     // =============================================
-    // INICIALIZAÇÃO
+    // INICIALIZAÇÃO E GESTÃO DE API KEY
     // =============================================
     (function init() {
         renderLeagues();
         updateApiStatus();
     })();
 
-    // =============================================
-    // O COFRE (GAVETA BLINDADA)
-    // =============================================
     function toggleVault() {
         const overlay = document.getElementById('vault-overlay');
         const drawer = document.getElementById('vault-drawer');
         const input = document.getElementById('api-key-input');
         
         if (drawer.classList.contains('-translate-x-full')) {
-            // ABRIR A GAVETA
             input.value = state.apiKey;
             overlay.classList.remove('hidden');
-            // Pequeno delay para o Tailwind processar a transição
             requestAnimationFrame(() => {
                 overlay.classList.remove('opacity-0');
                 drawer.classList.remove('-translate-x-full');
             });
         } else {
-            // FECHAR A GAVETA
             drawer.classList.add('-translate-x-full');
             overlay.classList.add('opacity-0');
-            setTimeout(() => {
-                overlay.classList.add('hidden');
-            }, 300);
+            setTimeout(() => { overlay.classList.add('hidden'); }, 300);
         }
     }
 
@@ -371,7 +362,11 @@
                 const url = `https://api.football-data.org/v4/competitions/${code}/teams`;
                 const res = await fetch(PROXY + encodeURIComponent(url), { headers: { 'X-Auth-Token': state.apiKey } });
                 
-                if (!res.ok) throw new Error('Acesso negado. Chave inválida ou limite atingido.');
+                if (!res.ok) {
+                    if (res.status === 403) throw new Error('Bloqueado: Sua chave gratuita não suporta essa liga ou estourou o limite.');
+                    if (res.status === 429) throw new Error('Limite de uso atingido. Espere um minuto.');
+                    throw new Error('Falha na conexão com a API.');
+                }
                 
                 const data = await res.json();
                 state.leagueTeams[code] = data.teams.map(t => ({ id: t.id, name: t.shortName || t.name }));
@@ -402,7 +397,7 @@
             
             dropdown.innerHTML = filtered.map(t => `
                 <div class="ac-item" onclick="pickTeam(${t.id}, '${side}')">
-                    <span class="text-blue-300 font-bold">${t.name}</span>
+                    <span class="text-emerald-300 font-bold">${t.name}</span>
                 </div>
             `).join('');
             dropdown.classList.add('open');
@@ -441,16 +436,16 @@
     setupAutocomplete('B');
 
     // =============================================
-    // DOWNLOAD DOS JOGOS E MATEMÁTICA (MANTIDA)
+    // DOWNLOAD DOS JOGOS (COM CORREÇÃO DE FÉRIAS DE JULHO)
     // =============================================
     async function fetchBothTeams() {
         const btn = document.getElementById('btn-fetch');
-        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extraindo...';
-        document.getElementById('search-module').classList.add('real-pulse');
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Extraindo Dados Oficiais...';
+        document.getElementById('search-module').classList.add('pulse-border');
 
         try {
             const resA = await fetchTeam(state.teamA);
-            await new Promise(r => setTimeout(r, 1000)); // Delay p/ não dar erro 429
+            await new Promise(r => setTimeout(r, 1000)); // Previne erro 429 da API Grátis
             const resB = await fetchTeam(state.teamB);
 
             fillData('A', resA); fillData('B', resB);
@@ -460,29 +455,46 @@
             btn.innerHTML = '<i class="fa-solid fa-check"></i> Matriz Preenchida';
         } catch(e) {
             alert('Erro: ' + e.message);
-            btn.innerHTML = '<i class="fa-solid fa-download"></i> Tentar Novamente';
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Tentar Novamente';
         } finally {
-            document.getElementById('search-module').classList.remove('real-pulse');
+            document.getElementById('search-module').classList.remove('pulse-border');
             btn.disabled = false;
         }
     }
 
     async function fetchTeam(team) {
-        const url = `https://api.football-data.org/v4/teams/${team.id}/matches?status=FINISHED&limit=10`;
-        const res = await fetch(PROXY + encodeURIComponent(url), { headers: { 'X-Auth-Token': state.apiKey } });
+        let url = `https://api.football-data.org/v4/teams/${team.id}/matches?status=FINISHED&limit=10`;
+        let res = await fetch(PROXY + encodeURIComponent(url), { headers: { 'X-Auth-Token': state.apiKey } });
         if (!res.ok) throw new Error('Falha ao baixar dados do ' + team.name);
         
-        const data = await res.json();
-        let gp = 0, gc = 0, btts = 0; const t = data.matches.length;
-        if(t===0) throw new Error('Sem jogos para ' + team.name);
+        let data = await res.json();
+        
+        // CORREÇÃO: "BUG DE JULHO". Na Europa as temporadas viram no meio do ano.
+        // Se a API retornar vazio para o ano atual, voltamos no tempo para o ano passado.
+        if (data.matches && data.matches.length === 0) {
+            const lastSeason = new Date().getFullYear() - 1;
+            const urlPast = `https://api.football-data.org/v4/teams/${team.id}/matches?status=FINISHED&season=${lastSeason}&limit=10`;
+            const resPast = await fetch(PROXY + encodeURIComponent(urlPast), { headers: { 'X-Auth-Token': state.apiKey } });
+            if (resPast.ok) {
+                data = await resPast.json();
+            }
+        }
+
+        let gp = 0, gc = 0, btts = 0; const t = data.matches ? data.matches.length : 0;
+        if(t === 0) throw new Error('Sem jogos encontrados na temporada recente para ' + team.name + '. Tente outro time.');
 
         data.matches.forEach(m => {
             const isH = m.homeTeam.id === team.id;
             const f = isH ? m.score.fullTime.home : m.score.fullTime.away;
             const a = isH ? m.score.fullTime.away : m.score.fullTime.home;
-            if(f !== null) { gp += f; gc += a; if(f>0 && a>0) btts++; }
+            if(f !== null && a !== null) { 
+                gp += f; 
+                gc += a; 
+                if(f > 0 && a > 0) btts++; 
+            }
         });
 
+        // O app usa GOLS REAIS e Estima Cartões/Escanteios (pois a API Gratuita não fornece isso)
         return {
             g_pro: (gp/t).toFixed(2), g_con: (gc/t).toFixed(2),
             e_pro: (4.2 + gp/t*0.8).toFixed(1), e_con: (3.8 + gc/t*0.7).toFixed(1),
